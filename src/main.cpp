@@ -7,6 +7,7 @@
 #include <module.h>
 #include <unistd.h>
 #include <fstream>
+#include "spdlog/spdlog.h"
 
 #include <dsp/demod/psk.h>
 #include <dsp/buffer/packer.h>
