@@ -1,22 +1,28 @@
 # sdrpp-tetra-demodulator
 Tetra demodulator plugin for SDR++
 
-Designed to provide output to tetra-rx from osmo-tetra-sq5bpf
+Designed to fully demodulate and decode TETRA downlink signals
+
+Thanks to osmo-tetra authors for their great library
 
 Signal chain:
 
-VFO->Demodulator(RRC->AGC->Maximum Likelihood(y[n]y'[n]) timing recovery->Costas loop)->Constellation diagram->Symbol extractor->Differential decoder->Bits unpacker->Output file
+VFO->Demodulator(AGC->FLL->RRC->Maximum Likelihood(y[n]y'[n]) timing recovery->Costas loop)->Constellation diagram->Symbol extractor->Differential decoder->Bits unpacker->Osmo-tetra decoder->Sink
 
 Building:
 
   0.  If you have arch-like system, just install package sdrpp-tetra-demodulator-git with all dependencies
 
-  1.  Install SDR++ core headers to /usr/include/sdrpp_core/, if not installed (sdrpp-headers-git package for arch-like systems)
+  1.  Install SDR++ core headers to /usr/include/sdrpp_core/, if not installed. Refer to sdrpp-headers-git AUR package PKGBUILD on instructions how to do that
 
-          git clone https://github.com/AlexandreRouma/SDRPlusPlus.git
-          cd "SDRPlusPlus/core/src"
-          sudo mkdir -p "/usr/include/sdrpp_core"
-          sudo find . -regex ".*\.\(h\|hpp\)" -exec cp --parents \{\} "/usr/include/sdrpp_core" \;
+      OR if you don't want to use my header system, add -DSDRPP_MODULE_CMAKE="/path/to/sdrpp_build_dir/sdrpp_module.cmake" to cmake launch arguments
+
+      Download and patch ETSI TETRA codec(in this repository):
+
+          cd src/decoder/etsi_codec-patches
+          ./download_and_patch.sh
+
+      Install libosmocore via package manager
 
   2.  Build:
 
@@ -34,30 +40,14 @@ Building:
           }
 
       to config.json, or add it via Module manager
-      
+
 Usage:
 
   1.  Find TETRA frequency you want to receive
 
   2.  Move demodulator VFO to the center of it
 
-  3.  After some time, it will sync to the carrier and you'll see 4 constellation points(sync requires at least ~25dB of signal)
+  3.  After some time, it will sync to the carrier and you'll likely see 4 constellation points(sync requires at least ~20dB of signal)
 
-  4.  To use osmo-tetra-sq5bpf with it, you need:
-
-      Build osmo-tetra-sq5bpf itself (you can use my version with fixed compilation issues on latest GCC: https://github.com/cropinghigh/osmo-tetra-sq5bpf)
-
-      Create a FIFO, if you want live decoding:
-
-          mkfifo /tmp/fifo1 (you can change path to anywhere you want)
-
-      Enter path of that FIFO to the demodulator
-
-      Run tetra-rx:
-
-          tetra-rx -s -r -e /tmp/fifo1
-
-      Enable writing to the file in module
-
-      If everything was done right, you will see decoded BURSTs from tetra-rx
+  4.  If the channel is unencrypted, just wait for the voice activity and listen to it!
 
